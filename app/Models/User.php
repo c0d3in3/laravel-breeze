@@ -41,4 +41,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function visitedCountries() {
+        return $this->belongsToMany('App\Models\Country', 'visited_countries', 'user_id', 'country_id');
+    }
+
+    public function countriesToVisit() {
+        return $this->belongsToMany('App\Models\Country', 'countries_to_visits', 'user_id','country_id');
+    }
 }
