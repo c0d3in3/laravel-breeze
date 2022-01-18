@@ -12,9 +12,11 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200 flex">
-                        <div class="w-1/2">LEFT SIDE</div>
-
-                        <div class="w-1/2">
+                        <div class="w-2/3">
+                            <p>World Map</p>
+                            <div class="w-full h-96" id="map"></div>
+                        </div>
+                        <div class="w-1/3">
                             <div class="rounded shadow p-2">
                                 <h3 class="text-x1 text-indigo-500">
                                     Visited Countries
@@ -37,17 +39,7 @@
                                     <a
                                         href="javascript:void(0);"
                                         @click="addVisitedCountry"
-                                        class="
-                                            px-3
-                                            pt-1
-                                            text-md
-                                            bg-green-400
-                                            hover:bg-green-300
-                                            font-semibold
-                                            shadow
-                                            hover:shadow-x1
-                                            rounded
-                                        "
+                                        class="px-3 pt-1 text-md bg-green-400 hover:bg-green-300 font-semibold shadow hover:shadow-x1 rounded"
                                         >Add</a
                                     >
                                 </div>
@@ -60,18 +52,8 @@
                                         <span>{{ vc.name }}</span>
                                         <a
                                             href="javascript:void(0);"
-                                            @click="deleteVisitedCountry(vc.id)"
-                                            class="
-                                                px-3
-                                                pt-1
-                                                text-md
-                                                bg-green-400
-                                                hover:bg-green-300
-                                                font-semibold
-                                                shadow
-                                                hover:shadow-x1
-                                                rounded
-                                            "
+                                            @click="deleteVisitedCountry(vc)"
+                                            class="px-3 pt-1 text-md bg-green-400 hover:bg-green-300 font-semibold shadow hover:shadow-x1 rounded"
                                             >X</a
                                         >
                                     </div>
@@ -99,17 +81,7 @@
                                     <a
                                         href="javascript:void(0);"
                                         @click="addToVisitCountry"
-                                        class="
-                                            px-3
-                                            pt-1
-                                            text-md
-                                            bg-green-400
-                                            hover:bg-green-300
-                                            font-semibold
-                                            shadow
-                                            hover:shadow-x1
-                                            rounded
-                                        "
+                                        class="px-3 pt-1 text-md bg-green-400 hover:bg-green-300 font-semibold shadow hover:shadow-x1 rounded"
                                         >Add</a
                                     >
                                 </div>
@@ -122,18 +94,8 @@
                                         <span>{{ vc.name }}</span>
                                         <a
                                             href="javascript:void(0);"
-                                            @click="deleteCountryToVisit(vc.id)"
-                                            class="
-                                                px-3
-                                                pt-1
-                                                text-md
-                                                bg-green-400
-                                                hover:bg-green-300
-                                                font-semibold
-                                                shadow
-                                                hover:shadow-x1
-                                                rounded
-                                            "
+                                            @click="deleteCountryToVisit(vc)"
+                                            class="px-3 pt-1 text-md bg-green-400 hover:bg-green-300 font-semibold shadow hover:shadow-x1 rounded"
                                             >X</a
                                         >
                                     </div>
@@ -164,6 +126,7 @@ export default {
             selectedCountryToVisit: "",
             visitedCountries: [],
             countriesToVisit: [],
+            map: {},
         };
     },
     methods: {
@@ -176,11 +139,21 @@ export default {
         getVisitedCountries() {
             axios.get("/api/countries/visited/").then((response) => {
                 this.visitedCountries = response.data;
+                response.data.forEach((element) => {
+                    this.map.updateChoropleth({
+                        [element.code]: "#ff0000",
+                    });
+                });
             });
         },
         getCountriesToVisit() {
             axios.get("/api/countries/tovisit/").then((response) => {
                 this.countriesToVisit = response.data;
+                response.data.forEach((element) => {
+                    this.map.updateChoropleth({
+                        [element.code]: "#ffff00",
+                    });
+                });
             });
         },
         addVisitedCountry() {
@@ -209,32 +182,52 @@ export default {
                 console.warn(" 2syou must choose country first");
             }
         },
-        deleteVisitedCountry(id) {
+        deleteVisitedCountry(country) {
             axios
                 .delete("/api/countries/delete-visited-country", {
                     params: {
-                        countryID: id,
+                        countryID: country.id,
                     },
                 })
                 .then((response) => {
+                    this.map.updateChoropleth({
+                        [country.code]: "#ABDDA4",
+                    });
                     this.getVisitedCountries();
                 });
         },
-        deleteCountryToVisit(id) {
+        deleteCountryToVisit(country) {
             axios
                 .delete("/api/countries/delete-country-to-visit", {
                     params: {
-                        countryID: id,
+                        countryID: country.id,
                     },
                 })
                 .then((response) => {
+                    this.map.updateChoropleth({
+                        [country.code]: "#ABDDA4",
+                    });
                     this.getCountriesToVisit();
                 });
+        },
+        initMap() {
+            this.map = new Datamap({
+                element: document.getElementById("map"),
+                projection: "mercator",
+                fills: {
+                    defaultFill: "#ABDDA4",
+                    visitedCountry: "#fa0fa0",
+                    countryToVisit: "#fa0fa0",
+                },
+            });
         },
     },
     created() {
         this.getVisitedCountries();
         this.getCountriesToVisit();
+        setTimeout(() => {
+            this.initMap();
+        }, 500);
     },
 };
 </script>

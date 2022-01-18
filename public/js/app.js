@@ -21840,6 +21840,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Layouts_Authenticated_vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Layouts/Authenticated.vue */ "./resources/js/Layouts/Authenticated.vue");
 /* harmony import */ var _inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @inertiajs/inertia-vue3 */ "./node_modules/@inertiajs/inertia-vue3/dist/index.js");
 /* harmony import */ var vue3_select2_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vue3-select2-component */ "./node_modules/vue3-select2-component/src/Select2.vue");
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 
 
 
@@ -21854,7 +21856,8 @@ __webpack_require__.r(__webpack_exports__);
       selectedVisitedCountry: "",
       selectedCountryToVisit: "",
       visitedCountries: [],
-      countriesToVisit: []
+      countriesToVisit: [],
+      map: {}
     };
   },
   methods: {
@@ -21879,6 +21882,9 @@ __webpack_require__.r(__webpack_exports__);
 
       axios.get("/api/countries/visited/").then(function (response) {
         _this.visitedCountries = response.data;
+        response.data.forEach(function (element) {
+          _this.map.updateChoropleth(_defineProperty({}, element.code, "#ff0000"));
+        });
       });
     },
     getCountriesToVisit: function getCountriesToVisit() {
@@ -21886,6 +21892,9 @@ __webpack_require__.r(__webpack_exports__);
 
       axios.get("/api/countries/tovisit/").then(function (response) {
         _this2.countriesToVisit = response.data;
+        response.data.forEach(function (element) {
+          _this2.map.updateChoropleth(_defineProperty({}, element.code, "#ffff00"));
+        });
       });
     },
     addVisitedCountry: function addVisitedCountry() {
@@ -21914,32 +21923,52 @@ __webpack_require__.r(__webpack_exports__);
         console.warn(" 2syou must choose country first");
       }
     },
-    deleteVisitedCountry: function deleteVisitedCountry(id) {
+    deleteVisitedCountry: function deleteVisitedCountry(country) {
       var _this5 = this;
 
       axios["delete"]("/api/countries/delete-visited-country", {
         params: {
-          countryID: id
+          countryID: country.id
         }
       }).then(function (response) {
+        _this5.map.updateChoropleth(_defineProperty({}, country.code, "#ABDDA4"));
+
         _this5.getVisitedCountries();
       });
     },
-    deleteCountryToVisit: function deleteCountryToVisit(id) {
+    deleteCountryToVisit: function deleteCountryToVisit(country) {
       var _this6 = this;
 
       axios["delete"]("/api/countries/delete-country-to-visit", {
         params: {
-          countryID: id
+          countryID: country.id
         }
       }).then(function (response) {
+        _this6.map.updateChoropleth(_defineProperty({}, country.code, "#ABDDA4"));
+
         _this6.getCountriesToVisit();
+      });
+    },
+    initMap: function initMap() {
+      this.map = new Datamap({
+        element: document.getElementById("map"),
+        projection: "mercator",
+        fills: {
+          defaultFill: "#ABDDA4",
+          visitedCountry: "#fa0fa0",
+          countryToVisit: "#fa0fa0"
+        }
       });
     }
   },
   created: function created() {
+    var _this7 = this;
+
     this.getVisitedCountries();
     this.getCountriesToVisit();
+    setTimeout(function () {
+      _this7.initMap();
+    }, 500);
   }
 });
 
@@ -23285,13 +23314,16 @@ var _hoisted_5 = {
 };
 
 var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-  "class": "w-1/2"
-}, "LEFT SIDE", -1
+  "class": "w-2/3"
+}, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "World Map"), /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  "class": "w-full h-96",
+  id: "map"
+})], -1
 /* HOISTED */
 );
 
 var _hoisted_7 = {
-  "class": "w-1/2"
+  "class": "w-1/3"
 };
 var _hoisted_8 = {
   "class": "rounded shadow p-2"
@@ -23375,7 +23407,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
           href: "javascript:void(0);",
           onClick: function onClick($event) {
-            return $options.deleteVisitedCountry(vc.id);
+            return $options.deleteVisitedCountry(vc);
           },
           "class": "px-3 pt-1 text-md bg-green-400 hover:bg-green-300 font-semibold shadow hover:shadow-x1 rounded"
         }, "X", 8
@@ -23417,7 +23449,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
           href: "javascript:void(0);",
           onClick: function onClick($event) {
-            return $options.deleteCountryToVisit(vc.id);
+            return $options.deleteCountryToVisit(vc);
           },
           "class": "px-3 pt-1 text-md bg-green-400 hover:bg-green-300 font-semibold shadow hover:shadow-x1 rounded"
         }, "X", 8
